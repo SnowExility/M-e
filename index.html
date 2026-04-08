@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✝ para mamãe ✝</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=IM+Fell+English:ital@1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #1a0812;
+      --deep:      #220d18;
+      --navy:      #3d1530;
+      --pink-mid:  #7a2d52;
+      --pink:      #c2567a;
+      --glow:      #f4a0c0;
+      --pale:      #f7bfd4;
+      --mist:      #fce4ee;
+      --ink:       #fdf0f5;
+      --white:     #fff5f8;
+      --red-line:  rgba(180, 80, 120, 0.2);
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      overflow: hidden;
+      font-family: 'Caveat', cursive;
+      color: var(--ink);
+    }
+
+    #canvas {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.5;
+    }
+
+    /* ─── SPOTIFY BAR ─── */
+    #spotify-bar {
+      position: fixed;
+      top: -110px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      transition: top .75s cubic-bezier(.34,1.28,.64,1);
+      filter: drop-shadow(0 8px 24px rgba(0,0,0,.65));
+    }
+    #spotify-bar.visible { top: 14px; }
+    #spotify-bar iframe {
+      border-radius: 14px;
+      border: 1px solid rgba(244,160,192,.28);
+      box-shadow: 0 4px 30px rgba(0,0,0,.55), 0 0 30px rgba(244,160,192,.14);
+      display: block;
+    }
+
+    /* ─── LANDING ─── */
+    #landing {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 10;
+      transition: opacity .9s ease, transform .9s ease;
+    }
+    #landing.hidden { opacity:0; pointer-events:none; transform:scale(.96) translateY(-10px); }
+
+    .landing-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic; font-size: 1rem;
+      color: var(--pale); letter-spacing: .4em;
+      text-transform: lowercase;
+      margin-bottom: 2.8rem;
+      opacity: 0;
+      animation: riseIn .9s .4s forwards;
+    }
+
+    /* ─── Book ─── */
+    .scene {
+      perspective: 1400px;
+      width: 270px; height: 370px;
+      opacity: 0;
+      animation: riseIn 1s .7s forwards;
+    }
+
+    .book {
+      width: 100%; height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 1.4s cubic-bezier(.35,0,.2,1);
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='4' fill='none' stroke='%23f4a0c0' stroke-width='1.5'/%3E%3C/svg%3E") 10 10, pointer;
+    }
+    .book.flipped { transform: rotateY(-180deg) scale(.7) !important; }
+
+    .cover, .cover-back {
+      position: absolute; inset: 0;
+      backface-visibility: hidden;
+      border-radius: 3px 12px 12px 3px;
+      overflow: hidden;
+    }
+
+    /* Front cover */
+    .cover {
+      background: #1f0b14;
+      border: 1.5px solid rgba(244,160,192,.38);
+      box-shadow:
+        6px 0 20px rgba(0,0,0,.75),
+        0 0 60px rgba(244,160,192,.18),
+        inset 0 1px 0 rgba(244,160,192,.28),
+        inset -3px 0 12px rgba(0,0,0,.55);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+    }
+
+    .cover::before {
+      content: '';
+      position: absolute; top:0; left:0;
+      width: 22px; height: 100%;
+      background: linear-gradient(to right, #120508, #1e0c14);
+      border-right: 1px solid rgba(244,160,192,.22);
+      z-index: 2;
+    }
+
+    .cover::after {
+      content: '';
+      position: absolute;
+      inset: 12px 12px 12px 28px;
+      border: 1px solid rgba(244,160,192,.22);
+      border-radius: 4px;
+      z-index: 2; pointer-events: none;
+    }
+
+    .cover-img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center top;
+      -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+      mask-image:         linear-gradient(to bottom, black 40%, transparent 100%);
+    }
+
+    .cover-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(26,8,18,.15) 0%,
+        rgba(26,8,18,.52) 50%,
+        rgba(26,8,18,.94) 100%
+      );
+      z-index: 1;
+    }
+
+    .cover-stars {
+      position: absolute; inset: 0;
+      z-index: 3; pointer-events: none;
+    }
+    /* crosses on cover */
+    .cover-stars span {
+      position: absolute;
+      color: var(--glow); opacity: .22;
+      animation: twinkle var(--td) var(--dl) ease-in-out infinite;
+      font-style: normal; line-height: 1;
+    }
+
+    .cover-text-group {
+      position: relative; z-index: 4;
+      display: flex; flex-direction: column;
+      align-items: center;
+      padding: 0 28px 22px; width: 100%;
+    }
+
+    .cover-glyph {
+      font-size: 2rem; color: var(--pale); line-height: 1;
+      text-shadow: 0 0 22px rgba(244,160,192,.75);
+      margin-bottom: .35rem;
+    }
+
+    .cover-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic; font-size: 1.85rem;
+      color: var(--white); text-align: center; line-height: 1.2;
+      text-shadow: 0 0 18px rgba(244,160,192,.5), 0 2px 6px rgba(0,0,0,.85);
+    }
+
+    .cover-line {
+      width: 70px; height: 1px;
+      background: linear-gradient(to right, transparent, var(--pale), transparent);
+      margin: .6rem auto;
+    }
+
+    .cover-sub {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: .7rem; letter-spacing: .22em;
+      color: var(--pale); text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(244,160,192,.4);
+    }
+
+    .cover-back { background: var(--deep); transform: rotateY(180deg); }
+
+    .hint-text {
+      margin-top: 2rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic; font-size: .85rem;
+      color: rgba(244,160,192,.5); letter-spacing: .18em;
+      opacity: 0;
+      animation: pulse 2.5s 2s ease-in-out infinite, riseIn .8s 1.6s forwards;
+    }
+
+    /* ─── DIARY ─── */
+    #diary {
+      position: relative; z-index: 5;
+      opacity: 0; transform: translateY(25px);
+      transition: opacity 1.1s .3s, transform 1.1s .3s;
+      pointer-events: none;
+    }
+    #diary.visible { opacity:1; transform:translateY(0); pointer-events:all; }
+
+    .diary-wrap {
+      max-width: 720px; margin: 0 auto;
+      padding: 7rem 1.5rem 10rem;
+    }
+
+    .page {
+      position: relative;
+      background:
+        repeating-linear-gradient(
+          transparent 0px, transparent 30px,
+          rgba(244,160,192,.07) 30px, rgba(244,160,192,.07) 31px
+        ),
+        linear-gradient(175deg, #230e18 0%, #1b0a12 60%, #1e0d15 100%);
+      border-radius: 2px 8px 8px 2px;
+      padding: 3.5rem 2.8rem 3.5rem 6rem;
+      box-shadow:
+        0 0 80px rgba(244,160,192,.07),
+        0 40px 100px rgba(0,0,0,.5),
+        inset 0 1px 0 rgba(244,160,192,.06);
+    }
+
+    .page::before {
+      content: '';
+      position: absolute; top:0; left:5.2rem;
+      height:100%; width:1px;
+      background: var(--red-line);
+    }
+
+    .page::after {
+      content: '';
+      position: absolute; top:0; left:0;
+      width:4.8rem; height:100%;
+      background: linear-gradient(to right, #150710, #1b0912);
+      border-right: 1.5px solid rgba(244,160,192,.1);
+      border-radius: 2px 0 0 2px;
+    }
+
+    .rings {
+      position: absolute; top:0; left:0;
+      width:4.8rem; height:100%;
+      z-index:2; pointer-events:none; overflow:hidden;
+    }
+    .ring {
+      position: absolute; left:50%;
+      transform: translateX(-50%);
+      width:18px; height:22px;
+      border: 2px solid rgba(244,160,192,.3);
+      border-radius: 50%;
+      background: rgba(20,6,12,.8);
+      box-shadow: 0 0 6px rgba(244,160,192,.15);
+    }
+
+    /* ── Floating crosses on page ── */
+    .page-cross {
+      position: absolute;
+      font-size: 1rem;
+      color: var(--pink);
+      opacity: .13;
+      pointer-events: none;
+      user-select: none;
+      animation: floatCross var(--fc-dur) var(--fc-del) ease-in-out infinite;
+    }
+
+    @keyframes floatCross {
+      0%,100%{ transform: translateY(0) rotate(var(--fc-rot)); }
+      50%    { transform: translateY(-6px) rotate(var(--fc-rot)); }
+    }
+
+    /* ── Typography ── */
+    .diary-header { text-align:center; margin-bottom:2.5rem; }
+    .diary-date {
+      font-family:'Cormorant Garamond',serif; font-style:italic;
+      font-size:.88rem; color:var(--pink); letter-spacing:.3em; margin-bottom:.4rem;
+    }
+    .diary-main-title {
+      font-family:'IM Fell English',serif; font-style:italic;
+      font-size:2.6rem; color:var(--mist);
+      text-shadow:0 0 30px rgba(244,160,192,.3); line-height:1.1;
+    }
+    .deco-line {
+      display:flex; align-items:center; justify-content:center;
+      gap:.6rem; margin:.6rem 0;
+      color:rgba(244,160,192,.4); font-size:.7rem; letter-spacing:.4em;
+    }
+    .deco-line::before,.deco-line::after {
+      content:''; width:60px; height:1px;
+      background:linear-gradient(to right,transparent,rgba(244,160,192,.35));
+    }
+    .deco-line::before{ transform:scaleX(-1); }
+
+    .para {
+      font-family:'Caveat',cursive;
+      font-size:1.32rem; line-height:1.92rem;
+      color:var(--ink); margin-bottom:.6rem;
+    }
+
+    /* ── Polaroids ── */
+    .polaroid {
+      display:inline-block; background:#1e0c15;
+      padding:8px 8px 32px;
+      border:1px solid rgba(244,160,192,.14);
+      box-shadow:
+        0 10px 30px rgba(0,0,0,.55),
+        0 0 0 1px rgba(0,0,0,.3),
+        0 0 30px rgba(244,160,192,.08);
+      position:relative;
+      transition:transform .35s ease, box-shadow .35s ease;
+      cursor:default;
+      animation:floatPhoto 6s ease-in-out infinite;
+    }
+    .polaroid:hover {
+      box-shadow:
+        0 16px 45px rgba(0,0,0,.6),
+        0 0 0 1px rgba(0,0,0,.3),
+        0 0 55px rgba(244,160,192,.22);
+      z-index:20 !important;
+    }
+    .polaroid img { display:block; width:100%; height:100%; object-fit:cover; filter:saturate(.85) brightness(.88) contrast(1.05); }
+    .polaroid-cap {
+      position:absolute; bottom:7px; left:0; right:0;
+      text-align:center; font-family:'Caveat',cursive;
+      font-size:.88rem; color:var(--mist); opacity:.65;
+    }
+    .polaroid .tape {
+      position:absolute; top:-8px; left:50%;
+      transform:translateX(-50%) rotate(-2deg);
+      width:55px; height:18px;
+      background:rgba(244,160,192,.16);
+      border:1px solid rgba(244,160,192,.12);
+    }
+
+    .photo-r { float:right; margin:.5rem -1.2rem 1.5rem 1.8rem; width:195px; height:255px; transform:rotate(3.5deg); }
+    .photo-r:hover { transform:rotate(0) scale(1.06) !important; }
+    .photo-l { float:left; margin:.5rem 1.8rem 1.5rem -1.2rem; width:200px; height:260px; transform:rotate(-2.8deg); }
+    .photo-l:hover { transform:rotate(0) scale(1.06) !important; }
+    .photo-c { display:block; margin:1.8rem auto; width:250px; height:320px; transform:rotate(.8deg); }
+    .photo-c:hover { transform:rotate(0) scale(1.05) !important; }
+    .photo-w { display:block; margin:1.8rem auto; width:310px; height:210px; transform:rotate(-1.2deg); }
+    .photo-w:hover { transform:rotate(0) scale(1.05) !important; }
+
+    .cf::after { content:''; display:table; clear:both; }
+
+    .sbreak {
+      text-align:center; margin:2rem 0;
+      color:rgba(244,160,192,.3);
+      font-size:.78rem; letter-spacing:1rem;
+    }
+
+    .signature {
+      font-family:'IM Fell English',serif; font-style:italic;
+      font-size:1.9rem; color:var(--pale);
+      text-align:right; margin-top:3rem; opacity:.8;
+      text-shadow:0 0 20px rgba(244,160,192,.25);
+    }
+
+    .sticker {
+      position:absolute; font-size:1.3rem;
+      opacity:.5; pointer-events:none; user-select:none;
+    }
+
+    /* ── Scroll reveal ── */
+    .appear { opacity:0; transform:translateY(18px); transition:opacity .75s ease,transform .75s ease; }
+    .appear.in { opacity:1; transform:none; }
+
+    /* ─── BACK BUTTON ─── */
+    #backBtn {
+      position:fixed; bottom:1.8rem; right:1.8rem;
+      z-index:50; display:none;
+      background:rgba(122,45,82,.7);
+      border:1px solid rgba(244,160,192,.5);
+      color:var(--pale);
+      font-family:'Cormorant Garamond',serif; font-style:italic;
+      font-size:.9rem; letter-spacing:.1em;
+      padding:.5rem 1.1rem; cursor:pointer;
+      border-radius:30px;
+      transition:background .3s, box-shadow .3s;
+      backdrop-filter:blur(8px);
+    }
+    #backBtn:hover { background:rgba(90,25,55,.85); box-shadow:0 0 20px rgba(244,160,192,.25); }
+
+    ::-webkit-scrollbar { width:5px; }
+    ::-webkit-scrollbar-track { background:var(--bg); }
+    ::-webkit-scrollbar-thumb { background:var(--pink-mid); border-radius:4px; }
+
+    /* ─── Animations ─── */
+    @keyframes riseIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes twinkle { 0%,100%{opacity:.12} 50%{opacity:.42} }
+    @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.75} }
+    @keyframes floatPhoto {
+      0%,100%{transform:translateY(0) rotate(var(--frot))}
+      50%{transform:translateY(-5px) rotate(var(--frot))}
+    }
+
+    @media(max-width:600px){
+      .page{padding:3rem 1.5rem 3rem 5rem;}
+      .page::before{left:4.5rem;} .page::after{width:4rem;} .rings{width:4rem;}
+      .photo-r,.photo-l{float:none;display:block;margin:1.5rem auto;}
+      .photo-c{width:220px;height:280px;} .photo-w{width:260px;height:175px;}
+      #spotify-bar iframe{width:280px !important;}
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<!-- SPOTIFY -->
+<div id="spotify-bar">
+  <iframe id="spotify-iframe"
+    src="" width="320" height="80" frameborder="0"
+    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+    loading="lazy"></iframe>
+</div>
+
+<!-- ════ LANDING ════ -->
+<div id="landing">
+  <p class="landing-label">✝ &nbsp; algo especial para você &nbsp; ✝</p>
+
+  <div class="scene" id="scene">
+    <div class="book" id="book">
+
+      <div class="cover" id="coverFront">
+        <!-- ✏️ Troque o src pela foto da capa -->
+        <img class="cover-img"
+          src="https://i.ibb.co/8DGKh2XZ/Whats-App-Image-2026-04-07-at-22-50-01.jpg"
+          alt="capa">
+        <div class="cover-overlay"></div>
+        <div class="cover-stars" id="coverStars"></div>
+        <div class="cover-text-group">
+          <div class="cover-glyph">✝</div>
+          <div class="cover-title">para<br>mamãe</div>
+          <div class="cover-line"></div>
+          <div class="cover-sub">com muito amor</div>
+        </div>
+      </div>
+
+      <div class="cover-back"></div>
+    </div>
+  </div>
+
+  <p class="hint-text">✝ &nbsp; clique para abrir &nbsp; ✝</p>
+</div>
+
+<!-- ════ DIARY ════ -->
+<div id="diary">
+  <div class="diary-wrap">
+    <div class="page" id="page">
+
+      <div class="rings" id="rings"></div>
+
+      <!-- Stickers fixos -->
+      <span class="sticker" style="top:22px;right:26px;transform:rotate(10deg)">🌸</span>
+      <span class="sticker" style="top:64px;right:16px;transform:rotate(-7deg);font-size:.95rem">✝</span>
+      <span class="sticker" style="bottom:120px;right:20px;transform:rotate(5deg)">🌷</span>
+      <span class="sticker" style="bottom:60px;right:26px;transform:rotate(-12deg);font-size:.85rem">✝</span>
+
+      <!-- Header -->
+      <div class="diary-header appear">
+        <div class="diary-date">— &nbsp; ✝ &nbsp; coloque a data aqui &nbsp; ✝ &nbsp; —</div>
+        <div class="diary-main-title">para a minha mãe</div>
+        <div class="deco-line">✝</div>
+      </div>
+
+      <!-- BLOCO 1 -->
+      <div class="appear">
+        <p class="para">
+          Querida mãe,<br><br>
+          Existe um versículo que diz <em>"Honra teu pai e tua mãe"</em> — e eu
+          aprendi o peso dessas palavras justamente por ter você como exemplo.
+          Você é a prova viva de que o amor de Deus pode ser sentido através
+          das pessoas, e eu tenho o privilégio de sentir isso todos os dias
+          através de você.
+        </p>
+      </div>
+
+      <!-- FOTO 1 (direita) -->
+      <div class="appear cf" style="transition-delay:.1s">
+        <div class="polaroid photo-r" style="--frot:3.5deg">
+          <div class="tape"></div>
+          <img src="https://i.ibb.co/hxhFDsGZ/Whats-App-Image-2026-04-07-at-22-50-00-3.jpg" alt="foto">
+          <div class="polaroid-cap">✝ nossa memória ✝</div>
+        </div>
+        <p class="para">
+          A senhora é uma pessoa muito importante, não so pra mim, mas pra mim, a juliana, a cinthia, e varios outros membros
+          da nossa familia
+        </p>
+        <p class="para">
+          Pode ser simples. As coisas mais simples costumam ser as mais bonitas.
+        </p>
+      </div>
+
+      <div class="sbreak appear" style="transition-delay:.05s">· · · ✝ · · ·</div>
+
+      <!-- BLOCO 2 -->
+      <div class="appear">
+        <p class="para">
+          Você me ensinou que a fé não é só ir à igreja — é acordar cedo e
+          fazer o jantar com amor, é perdoar mesmo quando é difícil, é sorrir
+          pra vida mesmo nos dias cinzas. Eu aprendi a ser quem eu sou
+          olhando pra você.
+        </p>
+      </div>
+
+      <!-- FOTO 2 (esquerda) -->
+      <div class="appear cf" style="transition-delay:.1s">
+        <div class="polaroid photo-l" style="--frot:-2.8deg">
+          <div class="tape"></div>
+          <img src="https://i.ibb.co/fVcbL5rj/Whats-App-Image-2026-04-07-at-22-50-00-2.jpg" alt="foto">
+          <div class="polaroid-cap">❝ sempre juntas ❞</div>
+        </div>
+        <p class="para">
+        </p>
+        <p class="para">
+        </p>
+      </div>
+
+      <div class="sbreak appear" style="transition-delay:.05s">· · · ✝ · · ·</div>
+
+      <!-- BLOCO 3 + foto central -->
+      <div class="appear">
+        <p class="para">
+        </p>
+      </div>
+
+      <div class="appear" style="transition-delay:.12s">
+        <div class="polaroid photo-c" style="--frot:.8deg">
+          <div class="tape"></div>
+          <img src="https://i.ibb.co/FkMpshtm/Whats-App-Image-2026-04-07-at-22-50-00-1.jpg" alt="foto">
+          <div class="polaroid-cap">minha favorita 🌸</div>
+        </div>
+      </div>
+
+      <div class="appear" style="transition-delay:.06s">
+        <p class="para">
+          Deus foi muito bondoso comigo quando me deu você como mãe.
+          Eu sei que não falo isso o suficiente, mas espero que esse
+          diário te mostre o quanto você é amada — por mim e por Ele.
+        </p>
+      </div>
+
+      <div class="sbreak appear" style="transition-delay:.05s">· · · ✝ · · ·</div>
+
+      <!-- BLOCO EXTRA -->
+      <div class="appear">
+        <p class="para">
+          Obrigada por cada oração que você fez por mim quando eu nem
+          sabia que precisava. Obrigada por acreditar quando eu duvidei,
+          por segurar minha mão nos momentos difíceis e por soltar quando
+          chegou a hora de voar.
+        </p>
+      </div>
+
+      <div class="appear" style="transition-delay:.08s">
+        <p class="para">
+          Você me mostrou que a força de uma mulher não está em nunca
+          cair — está em se levantar com fé, com graça e com um sorriso
+          no rosto. E eu quero ser isso também quando crescer. 🌷
+        </p>
+      </div>
+
+      <div class="sbreak appear" style="transition-delay:.05s">· · · ✝ · · ·</div>
+
+      <!-- BLOCO 4 + foto wide -->
+      <div class="appear">
+        <p class="para">
+          Que Deus continue te abençoando todos os dias, te guardando
+          em cada passo e enchendo sua vida de amor, saúde e alegria.
+          Você merece o mundo inteiro — e um pouquinho mais.
+        </p>
+      </div>
+
+      <div class="appear" style="transition-delay:.1s">
+        <div class="polaroid photo-w" style="--frot:-1.2deg">
+          <img src="https://i.ibb.co/QFX6kDJ0/Whats-App-Image-2026-04-07-at-22-50-00.jpg" alt="foto">
+          <div class="polaroid-cap">✝ nossa história ✝</div>
+        </div>
+      </div>
+
+      <div class="sbreak appear" style="transition-delay:.05s">· · · ✝ · · ·</div>
+
+      <!-- FECHAMENTO -->
+      <div class="appear" style="transition-delay:.08s">
+        <p class="para">
+          Te amo mais do que as palavras conseguem dizer, mais do que
+          esse diário consegue guardar. Você é meu lar, minha raiz,
+          minha maior bênção. Sempre. 💗
+        </p>
+        <p class="para" style="text-align:center; margin-top:1rem; font-size:1rem; color:var(--pale); opacity:.7; font-style:italic;">
+          ❝ Muitas mulheres têm procedido virtuosamente, mas tu as sobrepujas a todas. ❞<br>
+          <span style="font-size:.85rem">— Provérbios 31:29</span>
+        </p>
+      </div>
+
+      <div class="signature appear" style="transition-delay:.15s">
+        — com amor, João Pedro &nbsp; ✝
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<button id="backBtn" onclick="resetDiary()">✝ &nbsp; fechar &nbsp; ✝</button>
+
+<script>
+/* ✏️ Cole o ID do Spotify aqui
+   Ex: https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC → ID = 4uLU6hMCjMI75M1A2tKUQC */
+const SPOTIFY_TRACK_ID = 'ID_DA_MUSICA_AQUI';
+
+/* ── Particles ── */
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+const COLORS = [[244,160,192],[255,180,210],[200,100,150],[255,200,225]];
+const pts = Array.from({length:140}, ()=>({
+  x: Math.random()*window.innerWidth,
+  y: Math.random()*window.innerHeight,
+  r: Math.random()*1.4+.25,
+  dx:(Math.random()-.5)*.28,
+  dy:(Math.random()-.5)*.28,
+  op:Math.random()*.5+.1,
+  ph:Math.random()*Math.PI*2,
+  c: COLORS[Math.floor(Math.random()*COLORS.length)],
+}));
+
+function drawPts(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  pts.forEach(p=>{
+    p.ph+=.018;
+    const a=p.op*(.65+.35*Math.sin(p.ph));
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${p.c[0]},${p.c[1]},${p.c[2]},${a})`; ctx.fill();
+    p.x+=p.dx; p.y+=p.dy;
+    if(p.x<0)p.x=canvas.width; if(p.x>canvas.width)p.x=0;
+    if(p.y<0)p.y=canvas.height; if(p.y>canvas.height)p.y=0;
+  });
+  requestAnimationFrame(drawPts);
+}
+drawPts();
+
+/* ── Cover crosses ── */
+const coverStars = document.getElementById('coverStars');
+const crossPositions = [
+  [12,8,'.9rem'],[88,12,'1rem'],[18,80,'.75rem'],[82,78,'1.1rem'],
+  [50,4,'.85rem'],[8,48,'.7rem'],[92,55,'1rem'],[32,22,'.8rem'],
+  [68,72,'.9rem'],[46,88,'.75rem'],[4,28,'1rem'],[96,35,'.8rem'],
+  [60,15,'.85rem'],[24,60,'.9rem'],[75,40,'.7rem'],[55,55,'1rem'],[38,35,'.8rem']
+];
+crossPositions.forEach(([x,y,sz], i)=>{
+  const s=document.createElement('span');
+  s.textContent='✝';
+  s.style.cssText=`left:${x}%;top:${y}%;font-size:${sz};--td:${2+Math.random()*3}s;--dl:${i*.18}s`;
+  coverStars.appendChild(s);
+});
+
+/* ── Floating crosses on page ── */
+const page = document.getElementById('page');
+const pageCrossData = [
+  {top:'8%',  right:'6.5rem', rot:'-5deg',  dur:'7s',  del:'0s'},
+  {top:'22%', right:'6.8rem', rot:'8deg',   dur:'9s',  del:'1s'},
+  {top:'38%', right:'6.3rem', rot:'-10deg', dur:'8s',  del:'2s'},
+  {top:'54%', right:'6.6rem', rot:'4deg',   dur:'10s', del:'.5s'},
+  {top:'70%', right:'6.4rem', rot:'-7deg',  dur:'7.5s',del:'1.5s'},
+  {top:'85%', right:'6.7rem', rot:'6deg',   dur:'9s',  del:'2.5s'},
+  {top:'15%', left:'5.5rem',  rot:'3deg',   dur:'8.5s',del:'.8s'},
+  {top:'45%', left:'5.3rem',  rot:'-6deg',  dur:'7s',  del:'2s'},
+  {top:'72%', left:'5.6rem',  rot:'9deg',   dur:'9.5s',del:'1.2s'},
+];
+pageCrossData.forEach(d => {
+  const el = document.createElement('div');
+  el.className = 'page-cross';
+  el.textContent = '✝';
+  el.style.cssText = `
+    top:${d.top};
+    ${d.right ? 'right:'+d.right : 'left:'+d.left};
+    --fc-rot:${d.rot};
+    --fc-dur:${d.dur};
+    --fc-del:${d.del};
+  `;
+  page.appendChild(el);
+});
+
+/* ── Rings ── */
+const ringsEl=document.getElementById('rings');
+for(let i=0;i<18;i++){
+  const r=document.createElement('div');
+  r.className='ring'; r.style.top=(4+i*(92/18))+'%';
+  ringsEl.appendChild(r);
+}
+
+/* ── 3D tilt ── */
+const scene=document.getElementById('scene');
+const book =document.getElementById('book');
+scene.addEventListener('mousemove',e=>{
+  if(book.classList.contains('flipped'))return;
+  const rc=scene.getBoundingClientRect();
+  const x=((e.clientX-rc.left)/rc.width-.5)*2;
+  const y=((e.clientY-rc.top)/rc.height-.5)*2;
+  book.style.transform=`rotateY(${x*22}deg) rotateX(${-y*16}deg)`;
+});
+scene.addEventListener('mouseleave',()=>{
+  if(!book.classList.contains('flipped'))book.style.transform='';
+});
+
+/* ── Open / Reset ── */
+const landing       = document.getElementById('landing');
+const diary         = document.getElementById('diary');
+const backBtn       = document.getElementById('backBtn');
+const spotifyBar    = document.getElementById('spotify-bar');
+const spotifyIframe = document.getElementById('spotify-iframe');
+
+book.addEventListener('click', openDiary);
+
+function openDiary(){
+  book.classList.add('flipped');
+  if(SPOTIFY_TRACK_ID && SPOTIFY_TRACK_ID !== 'ID_DA_MUSICA_AQUI'){
+    spotifyIframe.src=`https://open.spotify.com/embed/track/${SPOTIFY_TRACK_ID}?utm_source=generator&theme=0&autoplay=1`;
+  }
+  setTimeout(()=> spotifyBar.classList.add('visible'), 650);
+  setTimeout(()=>{
+    landing.classList.add('hidden');
+    setTimeout(()=>{
+      document.body.style.overflow='auto';
+      diary.classList.add('visible');
+      backBtn.style.display='block';
+      checkAppear();
+    },120);
+  },820);
+}
+
+function resetDiary(){
+  document.body.style.overflow='hidden';
+  diary.classList.remove('visible');
+  backBtn.style.display='none';
+  spotifyBar.classList.remove('visible');
+  setTimeout(()=>{ spotifyIframe.src=''; },750);
+  window.scrollTo({top:0,behavior:'instant'});
+  setTimeout(()=>{
+    book.classList.remove('flipped');
+    book.style.transform='';
+    landing.classList.remove('hidden');
+    document.querySelectorAll('.appear').forEach(el=>el.classList.remove('in'));
+  },600);
+}
+
+/* ── Scroll reveal ── */
+function checkAppear(){
+  document.querySelectorAll('.appear').forEach(el=>{
+    if(el.getBoundingClientRect().top < window.innerHeight*.92)
+      el.classList.add('in');
+  });
+}
+window.addEventListener('scroll', checkAppear, {passive:true});
+document.body.style.overflow='hidden';
+</script>
+</body>
+</html>
